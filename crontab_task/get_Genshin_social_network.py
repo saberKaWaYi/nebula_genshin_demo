@@ -45,6 +45,7 @@ class GenshinSocialNetwork:
         except Exception as e:
             logger.error(f"步骤1执行失败: {e}")
             raise
+        logger.info(f"【原神角色名称】：{self.characters}")
 
     def step2(self):
         pass
