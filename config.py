@@ -22,11 +22,17 @@ LOGGING_CONFIG = {
             'filename': str(CRON_LOG_FILE),
             'formatter': 'standard',
             'level': 'INFO',
+            'encoding': 'utf-8',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+            'level': 'DEBUG',
         },
     },
     'loggers': {
         'cron_task': {
-            'handlers': ['crontab_task'],
+            'handlers': ['crontab_task', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
