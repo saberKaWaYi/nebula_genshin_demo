@@ -31,7 +31,9 @@ class GenshinSocialNetwork:
         try:
             response = requests.get(url, headers=headers)
             response.encoding = "utf-8"
-            logger.debug(f"请求URL: {url}, 状态码: {response.status_code}")
+            if response.status_code != 200:
+                logger.error(f"请求URL: {url}, 状态码: {response.status_code}")
+                raise Exception(f"请求URL: {url}, 状态码: {response.status_code}")
             soup = BeautifulSoup(response.text, "html.parser")
             items = soup.select("div.divsort.g")
             for item in items:
@@ -64,6 +66,9 @@ class GenshinSocialNetwork:
         try:
             response = requests.get(url, headers=headers)
             response.encoding = "utf-8"
+            if response.status_code != 200:
+                logger.error(f"请求URL: {url}, 状态码: {response.status_code}")
+                raise Exception(f"请求URL: {url}, 状态码: {response.status_code}")
             logger.debug(f"请求URL: {url}, 状态码: {response.status_code}")
             soup = BeautifulSoup(response.text, "html.parser")
             name_en = soup.select_one('th:-soup-contains("全名/本名") + td span[lang="en"]').get_text(strip=True)[:-1]
@@ -91,7 +96,9 @@ class GenshinSocialNetwork:
         try:
             response = requests.get(url, headers=headers)
             response.encoding = "utf-8"
-            logger.debug(f"请求URL: {url}, 状态码: {response.status_code}")
+            if response.status_code != 200:
+                logger.error(f"请求URL: {url}, 状态码: {response.status_code}")
+                raise Exception(f"请求URL: {url}, 状态码: {response.status_code}")
             soup = BeautifulSoup(response.text, "html.parser")
         except Exception as e:
             logger.error(f"获取角色 {character} 的社交网络数据失败: {e}")
