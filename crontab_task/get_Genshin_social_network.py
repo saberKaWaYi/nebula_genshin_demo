@@ -17,11 +17,9 @@ class GenshinSocialNetwork:
         self.social_network = {}
 
     def get_social_network(self):
-        logger.info("开始获取社交网络数据")
         self.step1()
         self.step2()
         self.step3()
-        logger.info("社交网络数据获取完成")
 
     def step1(self):
         logger.info("开始执行步骤1：获取角色名称中文列表")
@@ -50,14 +48,18 @@ class GenshinSocialNetwork:
         logger.info(f"【原神角色中文名称】：{s}")
 
     def step2(self):
-        logger.info("开始执行步骤1：获取角色名称英文列表")
+        logger.info("开始执行步骤2：获取角色名称英文列表")
+        s=",".join([character['name_en'] for character in self.characters])
+        logger.info(f"【原神角色英文名称】：{s}")
 
     def step3(self):
+        logger.info("开始执行步骤3：获取角色社交网络数据")
         for character in self.characters:
             name_zn = character["name_zn"]
             logger.info(f"开始获取角色 {name_zn} 的社交网络数据")
             self.scrpayer_step3(name_zn)
             logger.info(f"获取角色 {name_zn} 的社交网络数据完成")
+        logger.info(f"步骤3执行完成，共获取 {len(self.characters)} 个角色社交网络数据")
 
     def scrpayer_step3(self, character):
         path = quote(f"{character}语音", encoding="utf-8")
