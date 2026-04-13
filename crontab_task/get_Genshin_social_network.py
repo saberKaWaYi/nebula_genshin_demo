@@ -49,8 +49,26 @@ class GenshinSocialNetwork:
 
     def step2(self):
         logger.info("开始执行步骤2：获取角色名称英文列表")
+        for _ in range(len(self.characters)):
+            self.characters[_]["name_en"] = self.scrpayer_step2(self.characters[_]["name_zn"])
         s=",".join([character['name_en'] for character in self.characters])
         logger.info(f"【原神角色英文名称】：{s}")
+
+    def scrpayer_step2(self, character):
+        url = f"https://wiki.biligame.com/ys/{character}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0"
+        }
+        try:
+            response = requests.get(url, headers=headers)
+            response.encoding = "utf-8"
+            logger.debug(f"请求URL: {url}, 状态码: {response.status_code}")
+            soup = BeautifulSoup(response.text, "html.parser")
+            name_en = soup.select_one('th:-soup-contains("全名/本名") + td span[lang="en"]').get_text(strip=True)
+            return name_en
+        except Exception as e:
+            logger.error(f"获取角色 {character} 的英文名称失败: {e}")
+            raise
 
     def step3(self):
         logger.info("开始执行步骤3：获取角色社交网络数据")
