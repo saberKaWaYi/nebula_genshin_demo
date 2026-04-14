@@ -1,13 +1,15 @@
+from urllib.parse import quote
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import quote
 import time
+
 import logging
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from config import setup_logging
+from settings import settings
 
 setup_logging()
 logger = logging.getLogger('cron_task')
@@ -16,7 +18,9 @@ class GenshinSocialNetwork:
     def __init__(self):
         self.characters = []
         self.social_network = {}
-        self.time_sleep = 3
+        self.cookies = settings['crontab_task']['website_cookies']['wiki_biligame_com']["cookie_name"]
+        self.headers = settings['crontab_task']['headers']
+        self.time_sleep = settings['crontab_task']['time_sleep']
 
     def get_social_network(self):
         self.step1()
@@ -26,11 +30,8 @@ class GenshinSocialNetwork:
     def step1(self):
         logger.info("开始执行步骤1：获取角色名称中文列表")
         url = "https://wiki.biligame.com/ys/%E8%A7%92%E8%89%B2"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0"
-        }
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=self.headers, cookies=self.cookies)
             response.encoding = "utf-8"
             if response.status_code != 200:
                 logger.error(f"请求URL: {url}, 状态码: {response.status_code}")
@@ -60,12 +61,10 @@ class GenshinSocialNetwork:
         logger.info(f"【原神角色英文名称】：{s}")
 
     def scrpayer_step2(self, character):
-        url = f"https://wiki.biligame.com/ys/{character}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0"
-        }
+        path = quote(f"{character}", encoding="utf-8")
+        url = f"https://wiki.biligame.com/ys/{path}"
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=self.headers, cookies=self.cookies)
             response.encoding = "utf-8"
             if response.status_code != 200:
                 logger.error(f"请求URL: {url}, 状态码: {response.status_code}")
@@ -91,16 +90,25 @@ class GenshinSocialNetwork:
     def scrpayer_step3(self, character):
         path = quote(f"{character}语音", encoding="utf-8")
         url = f"https://wiki.biligame.com/ys/{path}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0"
-        }
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=self.headers, cookies=self.cookies)
             response.encoding = "utf-8"
             if response.status_code != 200:
                 logger.error(f"请求URL: {url}, 状态码: {response.status_code}")
                 raise Exception(f"请求URL: {url}, 状态码: {response.status_code}")
             soup = BeautifulSoup(response.text, "html.parser")
+            item_divs = soup.find_all("div",style="margin:2px 0px;width:100%;display: table;overflow: hidden;padding:1px;")
+            # print(len(item_divs))
+            # for item_div in item_divs:
+            #     title = item_div.find(
+            #         "div",
+            #         style="display: table-cell;width:180px;vertical-align: middle;background:#8F98A6;padding:5px 10px;color:#fff;font-weight:bold"
+            #     ).get_text(strip=True)
+            #     content = item_div.find(
+            #         "div",
+            #         class_="voice_text_chs vt_active"
+            #     ).get_text(strip=True)
+            #     print(title, content)
         except Exception as e:
             logger.error(f"获取角色 {character} 的社交网络数据失败: {e}")
             raise
