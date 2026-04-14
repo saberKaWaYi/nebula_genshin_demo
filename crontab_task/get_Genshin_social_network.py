@@ -43,19 +43,19 @@ class GenshinSocialNetwork:
                     name = name_tag.text.strip()
                     if "旅行者" in name or "奇偶" in name:
                         continue
-                    self.characters.append({"name_zn":name})
+                    self.characters.append({"name_zh":name})
             logger.info(f"步骤1执行完成，共获取 {len(self.characters)} 个角色中文名称")
         except Exception as e:
             logger.error(f"步骤1执行失败: {e}")
             raise
-        s=",".join([character['name_zn'] for character in self.characters])
+        s=",".join([character['name_zh'] for character in self.characters])
         logger.info(f"【原神角色中文名称】：{s}")
 
     def step2(self):
         logger.info("开始执行步骤2：获取角色名称英文列表")
         for _ in range(len(self.characters)):
             time.sleep(self.time_sleep)
-            self.characters[_]["name_en"] = self.scrpayer_step2(self.characters[_]["name_zn"])
+            self.characters[_]["name_en"] = self.scrpayer_step2(self.characters[_]["name_zh"])
         s=",".join([character['name_en'] for character in self.characters])
         logger.info(f"【原神角色英文名称】：{s}")
 
@@ -82,10 +82,10 @@ class GenshinSocialNetwork:
         logger.info("开始执行步骤3：获取角色社交网络数据")
         for character in self.characters:
             time.sleep(self.time_sleep)
-            name_zn = character["name_zn"]
-            logger.info(f"开始获取角色 {name_zn} 的社交网络数据")
-            self.scrpayer_step3(name_zn)
-            logger.info(f"获取角色 {name_zn} 的社交网络数据完成")
+            name_zh = character["name_zh"]
+            logger.info(f"开始获取角色 {name_zh} 的社交网络数据")
+            self.scrpayer_step3(name_zh)
+            logger.info(f"获取角色 {name_zh} 的社交网络数据完成")
         logger.info(f"步骤3执行完成，共获取 {len(self.characters)} 个角色社交网络数据")
 
     def scrpayer_step3(self, character):
