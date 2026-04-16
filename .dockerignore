@@ -1,0 +1,10 @@
+__pycache__
+myvenv
+
+*.pyc
+*.log
+*.json
+
+.gitignore
+README.md
+CLAUDE.md

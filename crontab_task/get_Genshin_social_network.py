@@ -148,7 +148,7 @@ class GenshinSocialNetwork:
                             "name_zh": character,
                             "title_zh": title_zh,
                             "content_zh": content_zh,
-                            "name_en": character_name,
+                            "name_en": character_name_en,
                             "title_en": title_en,
                             "content_en": content_en
                         })
