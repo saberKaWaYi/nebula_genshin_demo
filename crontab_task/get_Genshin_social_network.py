@@ -107,6 +107,7 @@ class GenshinSocialNetwork:
         logger.info(f"步骤3执行完成，共获取 {count} 个角色社交网络数据")
 
     def scrpayer_step3(self, character):
+        character_name_en = [i for i in self.characters if i["name_zh"] == character][0]["name_en"]
         logger.info(f"开始获取角色 {character} 的社交网络数据")
         path = quote(f"{character}语音", encoding="utf-8")
         url = f"https://wiki.biligame.com/ys/{path}"
@@ -142,12 +143,12 @@ class GenshinSocialNetwork:
                         if character_name["name_zh"] not in title:
                             continue
                         title_zh = f"{character}关于{character_name['name_zh']}"
-                        title_en = f"{character} about {character_name['name_en']}"
+                        title_en = f"{character_name_en} about {character_name['name_en']}"
                         self.social_network.append({
                             "name_zh": character,
                             "title_zh": title_zh,
                             "content_zh": content_zh,
-                            "name_en": character_name["name_en"],
+                            "name_en": character_name,
                             "title_en": title_en,
                             "content_en": content_en
                         })
