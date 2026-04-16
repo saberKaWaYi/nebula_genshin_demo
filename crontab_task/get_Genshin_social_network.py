@@ -54,9 +54,12 @@ class GenshinSocialNetwork:
 
     def step2(self):
         logger.info("开始执行步骤2：获取角色名称英文列表")
+        count = 0
         for _ in range(len(self.characters)):
             time.sleep(self.time_sleep)
             self.characters[_]["name_en"] = self.scrpayer_step2(self.characters[_]["name_zh"])
+            count += 1
+        logger.info(f"步骤2执行完成，共获取 {count} 个角色英文名称")
         s=",".join([character['name_en'] for character in self.characters])
         logger.info(f"【原神角色英文名称】：{s}")
 
@@ -69,7 +72,6 @@ class GenshinSocialNetwork:
             if response.status_code != 200:
                 logger.error(f"请求URL: {url}, 状态码: {response.status_code}")
                 raise Exception(f"请求URL: {url}, 状态码: {response.status_code}")
-            logger.debug(f"请求URL: {url}, 状态码: {response.status_code}")
             soup = BeautifulSoup(response.text, "html.parser")
             name_en = soup.select_one('th:-soup-contains("全名/本名") + td span[lang="en"]').get_text(strip=True)[:-1]
             return name_en
@@ -79,13 +81,15 @@ class GenshinSocialNetwork:
 
     def step3(self):
         logger.info("开始执行步骤3：获取角色社交网络数据")
+        count = 0
         for character in self.characters:
             time.sleep(self.time_sleep)
             name_zh = character["name_zh"]
             logger.info(f"开始获取角色 {name_zh} 的社交网络数据")
             self.scrpayer_step3(name_zh)
             logger.info(f"获取角色 {name_zh} 的社交网络数据完成")
-        logger.info(f"步骤3执行完成，共获取 {len(self.characters)} 个角色社交网络数据")
+            count += 1
+        logger.info(f"步骤3执行完成，共获取 {count} 个角色社交网络数据")
 
     def scrpayer_step3(self, character):
         path = quote(f"{character}语音", encoding="utf-8")
@@ -98,17 +102,6 @@ class GenshinSocialNetwork:
                 raise Exception(f"请求URL: {url}, 状态码: {response.status_code}")
             soup = BeautifulSoup(response.text, "html.parser")
             item_divs = soup.find_all("div",style="margin:2px 0px;width:100%;display: table;overflow: hidden;padding:1px;")
-            # print(len(item_divs))
-            # for item_div in item_divs:
-            #     title = item_div.find(
-            #         "div",
-            #         style="display: table-cell;width:180px;vertical-align: middle;background:#8F98A6;padding:5px 10px;color:#fff;font-weight:bold"
-            #     ).get_text(strip=True)
-            #     content = item_div.find(
-            #         "div",
-            #         class_="voice_text_chs vt_active"
-            #     ).get_text(strip=True)
-            #     print(title, content)
         except Exception as e:
             logger.error(f"获取角色 {character} 的社交网络数据失败: {e}")
             raise
