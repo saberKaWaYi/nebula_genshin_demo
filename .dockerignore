@@ -6,5 +6,4 @@ myvenv
 *.json
 
 .gitignore
-README.md
-CLAUDE.md
+*.md
