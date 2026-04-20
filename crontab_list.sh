@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-CRON_SOURCE="/app/crontab_task/crontab.txt"
+CRON_SOURCE="/app/crawler/crontab.txt"
 CRON_TARGET="/etc/cron.d/genshin-cron"
 
 cp "$CRON_SOURCE" "$CRON_TARGET"
