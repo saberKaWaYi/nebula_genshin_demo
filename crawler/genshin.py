@@ -1,9 +1,9 @@
+import logging
 from urllib.parse import quote
 import requests
 from bs4 import BeautifulSoup
 import time
 import json
-import logging
 
 from config import crawler_settings, DATA_DIR, setup_logging
 
