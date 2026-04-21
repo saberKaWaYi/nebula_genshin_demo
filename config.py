@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 
 BASE_DIR = Path(__file__).resolve().parent
 LOG_DIR = BASE_DIR / "logs"
@@ -144,7 +144,7 @@ class Settings(BaseSettings):
     neo4j_uri: str = Field(default="bolt://localhost:7687", alias="NEO4J_URI")
     neo4j_username: str = Field(default="neo4j", alias="NEO4J_USERNAME")
     neo4j_password: str = Field(default="neo4j", alias="NEO4J_PASSWORD")
-    neo4j_database: str = Field(default="neo4j", alias="NEO4J_DATABASE")
+    businesses: list[str] = Field(default_factory=lambda: ["genshin"], alias="BUSINESSES")
 
     rabbitmq_host: str = Field(default="localhost", alias="RABBITMQ_HOST")
     rabbitmq_port: int = Field(default=5672, alias="RABBITMQ_PORT")
@@ -154,6 +154,23 @@ class Settings(BaseSettings):
 
     api_prefix: str = "/api/v1"
 
+    @field_validator("businesses", mode="before")
+    @classmethod
+    def parse_businesses(cls, value):
+        if value is None:
+            return ["genshin"]
+        if isinstance(value, str):
+            items = [item.strip() for item in value.split(",") if item.strip()]
+            if not items:
+                raise ValueError("BUSINESSES must include at least one business")
+            return items
+        if isinstance(value, list):
+            items = [str(item).strip() for item in value if str(item).strip()]
+            if not items:
+                raise ValueError("BUSINESSES must include at least one business")
+            return items
+        raise ValueError("BUSINESSES must be a comma-separated string or list")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -161,3 +178,14 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def get_business_database(business: str) -> str:
+    normalized = business.strip()
+    if not normalized:
+        raise ValueError("Business name cannot be empty")
+    if normalized not in settings.businesses:
+        raise ValueError(
+            f"Unknown business: {normalized!r}; expected one of {tuple(settings.businesses)}"
+        )
+    return normalized

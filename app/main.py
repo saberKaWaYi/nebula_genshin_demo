@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from config import settings, setup_logging
+from config import settings, setup_logging, get_business_database
 
 setup_logging("web")
 
@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
         uri=settings.neo4j_uri,
         username=settings.neo4j_username,
         password=settings.neo4j_password,
-        database=settings.neo4j_database,
+        database=get_business_database("genshin"),
     )
     neo4j_service.connect()
 

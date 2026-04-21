@@ -10,7 +10,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from config import setup_logging,crawler_settings,settings
+from config import setup_logging, crawler_settings, settings, get_business_database
 from app.services.neo4j_service import Neo4jService
 
 setup_logging("crawler")
@@ -195,7 +195,7 @@ class GenshinCrawler:
             uri=settings.neo4j_uri,
             username=settings.neo4j_username,
             password=settings.neo4j_password,
-            database=settings.neo4j_database,
+            database=get_business_database("genshin"),
         )
         try:
             neo4j.connect()
