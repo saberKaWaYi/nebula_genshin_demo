@@ -38,7 +38,7 @@ services:
 
   init-db:
     build: .
-    command: python crawler/scripts/init_business_dbs.py
+    command: python scripts/init_business_dbs.py
     depends_on:
       neo4j:
         condition: service_healthy

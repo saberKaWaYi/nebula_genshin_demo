@@ -1,21 +1,20 @@
 from pathlib import Path
+import subprocess
 import sys
+import logging
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-import logging
+from config import settings
+
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-import subprocess
-
-from config import settings
 
 
 def run_all() -> None:

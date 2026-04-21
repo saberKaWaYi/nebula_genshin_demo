@@ -5,7 +5,7 @@ from pathlib import Path
 
 from typing import Literal
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -154,6 +154,13 @@ class Settings(BaseSettings):
 
     api_prefix: str = "/api/v1"
 
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        enable_decoding=False,
+    )
+
     @field_validator("businesses", mode="before")
     @classmethod
     def parse_businesses(cls, value):
@@ -170,12 +177,6 @@ class Settings(BaseSettings):
                 raise ValueError("BUSINESSES must include at least one business")
             return items
         raise ValueError("BUSINESSES must be a comma-separated string or list")
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-
 
 settings = Settings()
 
