@@ -1,22 +1,4 @@
 services:
-  neo4j:
-    image: neo4j:2025.05.0
-    container_name: neo4j
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-    environment:
-      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/neo4j}
-    healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u \"$${NEO4J_AUTH%%/*}\" -p \"$${NEO4J_AUTH#*/}\" \"RETURN 1\" >/dev/null 2>&1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-    volumes:
-      - neo4j_data:/data
-    restart: unless-stopped
-
   rabbitmq:
     image: rabbitmq:management
     container_name: rabbit
@@ -31,64 +13,84 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 30s
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
 
   init-db:
-    build: .
+    build:
+      context: .
+      target: initdb
     command: python scripts/init_business_dbs.py
-    depends_on:
-      neo4j:
-        condition: service_healthy
     environment:
-      - NEO4J_URI=${NEO4J_URI:-bolt://neo4j:7687}
-      - NEO4J_USERNAME=${NEO4J_USERNAME}
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+      - NEBULA_HOST=${NEBULA_HOST}
+      - NEBULA_PORT=${NEBULA_PORT}
+      - NEBULA_USERNAME=${NEBULA_USERNAME}
+      - NEBULA_PASSWORD=${NEBULA_PASSWORD}
       - BUSINESSES=${BUSINESSES:-genshin}
     restart: "no"
 
   web:
-    build: .
+    build:
+      context: .
+      target: web
     command: python main.py web --host 0.0.0.0 --port 8000 --no-reload
     ports:
       - "8000:8000"
     depends_on:
-      neo4j:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      init-db:
-        condition: service_completed_successfully
     environment:
-      - NEO4J_URI=${NEO4J_URI:-bolt://neo4j:7687}
-      - NEO4J_USERNAME=${NEO4J_USERNAME}
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
-      - BUSINESSES=${BUSINESSES:-genshin}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
+      - RABBITMQ_QUEUE_NEBULA=${RABBITMQ_QUEUE_NEBULA:-nebula_operations}
+      - RABBITMQ_QUEUE_MONGO=${RABBITMQ_QUEUE_MONGO:-mongo_operations}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/docs', timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 30s
     restart: unless-stopped
 
   cron:
-    build: .
+    build:
+      context: .
+      target: cron
     command: /app/crontab_list.sh
     depends_on:
-      init-db:
-        condition: service_completed_successfully
       web:
         condition: service_healthy
+    environment:
+      - CRAWLER_API_BASE_URL=${CRAWLER_API_BASE_URL:-http://web:8000}
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      target: worker
+    command: python main.py worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      init-db:
+        condition: service_completed_successfully
+    environment:
+      - NEBULA_HOST=${NEBULA_HOST}
+      - NEBULA_PORT=${NEBULA_PORT}
+      - NEBULA_USERNAME=${NEBULA_USERNAME}
+      - NEBULA_PASSWORD=${NEBULA_PASSWORD}
+      - BUSINESSES=${BUSINESSES:-genshin}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_QUEUE_NEBULA=${RABBITMQ_QUEUE_NEBULA:-nebula_operations}
+      - RABBITMQ_QUEUE_MONGO=${RABBITMQ_QUEUE_MONGO:-mongo_operations}
     restart: unless-stopped
 
 volumes:
-  neo4j_data:
   rabbitmq_data:

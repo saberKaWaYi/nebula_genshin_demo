@@ -8,15 +8,25 @@ def run_web(host: str = "0.0.0.0", port: int = 8000, reload: bool = True):
 
 
 def run_crawler():
-    """爬取并入 Neo4j"""
+    """爬取并写入消息队列"""
     from crawler.genshin.genshin_network import run_crawler as run_genshin_network_crawler
     run_genshin_network_crawler()
 
 
+def run_worker():
+    """启动通用常驻消费者"""
+    from app.workers.nebula_worker import run_worker as run_queue_worker
+    run_queue_worker()
+
+
 def main():
     """统一入口"""
-    parser = argparse.ArgumentParser(description="Neo4j Project")
-    parser.add_argument("command", choices=["web", "crawler"], help="运行模式: web(启动API服务) 或 crawler(运行爬虫)")
+    parser = argparse.ArgumentParser(description="Nebula Demo")
+    parser.add_argument(
+        "command",
+        choices=["web", "crawler", "worker"],
+        help="运行模式: web(启动API服务) / crawler(运行爬虫) / worker(多队列消费并分发)",
+    )
     parser.add_argument("--host", default="0.0.0.0", help="Web服务主机地址")
     parser.add_argument("--port", type=int, default=8000, help="Web服务端口")
     parser.add_argument("--no-reload", action="store_true", help="禁用热重载")
@@ -27,6 +37,8 @@ def main():
         run_web(host=args.host, port=args.port, reload=not args.no_reload)
     elif args.command == "crawler":
         run_crawler()
+    elif args.command == "worker":
+        run_worker()
 
 
 if __name__ == "__main__":
