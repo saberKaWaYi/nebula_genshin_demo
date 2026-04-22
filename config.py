@@ -137,20 +137,29 @@ crawler_settings = CrawlerSettings()
 
 class Settings(BaseSettings):
     """应用配置"""
-    app_name: str = "Neo4j Operations API"
+    app_name: str = "Nebula Operations API"
     app_version: str = "1.0"
     debug: bool = False
 
-    neo4j_uri: str = Field(default="bolt://localhost:7687", alias="NEO4J_URI")
-    neo4j_username: str = Field(default="neo4j", alias="NEO4J_USERNAME")
-    neo4j_password: str = Field(default="neo4j", alias="NEO4J_PASSWORD")
+    nebula_host: str = Field(default="127.0.0.1", alias="NEBULA_HOST")
+    nebula_port: int = Field(default=9669, alias="NEBULA_PORT")
+    nebula_username: str = Field(default="root", alias="NEBULA_USERNAME")
+    nebula_password: str = Field(default="nebula", alias="NEBULA_PASSWORD")
     businesses: list[str] = Field(default_factory=lambda: ["genshin"], alias="BUSINESSES")
 
     rabbitmq_host: str = Field(default="localhost", alias="RABBITMQ_HOST")
     rabbitmq_port: int = Field(default=5672, alias="RABBITMQ_PORT")
     rabbitmq_username: str = Field(default="guest", alias="RABBITMQ_USERNAME")
     rabbitmq_password: str = Field(default="guest", alias="RABBITMQ_PASSWORD")
-    rabbitmq_queue: str = Field(default="neo4j", alias="RABBITMQ_QUEUE")
+    rabbitmq_queue_nebula: str = Field(
+        default="nebula_operations", alias="RABBITMQ_QUEUE_NEBULA"
+    )
+    rabbitmq_queue_mongo: str = Field(
+        default="mongo_operations", alias="RABBITMQ_QUEUE_MONGO"
+    )
+    crawler_api_base_url: str = Field(
+        default="http://localhost:8000", alias="CRAWLER_API_BASE_URL"
+    )
 
     api_prefix: str = "/api/v1"
 
@@ -181,7 +190,7 @@ class Settings(BaseSettings):
 settings = Settings()
 
 
-def get_business_database(business: str) -> str:
+def get_business_space(business: str) -> str:
     normalized = business.strip()
     if not normalized:
         raise ValueError("Business name cannot be empty")
