@@ -15,8 +15,9 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 WEB_LOG = LOG_DIR / "web.log"
 CRAWLER_LOG = LOG_DIR / "crawler.log"
+WORKER_LOG = LOG_DIR / "worker.log"
 
-LogService = Literal["web", "crawler"]
+LogService = Literal["web", "crawler", "worker"]
 
 
 def _standard_formatters() -> dict:
@@ -105,10 +106,41 @@ def _logging_dict_crawler() -> dict:
     }
 
 
+def _logging_dict_worker() -> dict:
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": _standard_formatters(),
+        "handlers": {
+            "worker_file": {
+                "class": "logging.FileHandler",
+                "filename": str(WORKER_LOG),
+                "formatter": "standard",
+                "level": "INFO",
+                "encoding": "utf-8",
+            },
+            "console": _console_handler(),
+        },
+        "loggers": {
+            "worker": {
+                "handlers": ["worker_file", "console"],
+                "level": "INFO",
+                "propagate": False,
+            },
+            "app.services": {
+                "handlers": ["worker_file", "console"],
+                "level": "INFO",
+                "propagate": False,
+            },
+        },
+    }
+
+
 def setup_logging(service: LogService) -> None:
     builders = {
         "web": _logging_dict_web,
         "crawler": _logging_dict_crawler,
+        "worker": _logging_dict_worker,
     }
     builder = builders.get(service)
     if builder is None:

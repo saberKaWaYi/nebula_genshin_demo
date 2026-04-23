@@ -15,7 +15,7 @@ def run_crawler():
 
 def run_worker():
     """启动通用常驻消费者"""
-    from app.workers.nebula_worker import run_worker as run_queue_worker
+    from worker.run import run_worker as run_queue_worker
     run_queue_worker()
 
 
