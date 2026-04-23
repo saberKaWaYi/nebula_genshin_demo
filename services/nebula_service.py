@@ -196,11 +196,14 @@ class NebulaService:
         self.select_space(space_name)
         validated_edge_type = self._validate_identifier(edge_type)
         deleted_count = 0
+        basic_query = f'DELETE EDGE {validated_edge_type} '
         for edge in edges:
             source_vid = self._escape_string(str(edge["source_vid"]))
             target_vid = self._escape_string(str(edge["target_vid"]))
-            self._execute(f'DELETE EDGE `{validated_edge_type}` "{source_vid}"->"{target_vid}"@0;')
+            basic_query += f'"{source_vid}" -> "{target_vid}"'
             deleted_count += 1
+        basic_query += ';'
+        self._execute(basic_query)
         return deleted_count
 
     def execute_operation(self, space_name: str, operation: str, data: dict) -> dict:
