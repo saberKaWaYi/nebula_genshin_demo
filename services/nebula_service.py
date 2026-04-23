@@ -77,9 +77,7 @@ class NebulaService:
     ) -> None:
         """CREATE SPACE IF NOT EXISTS。"""
         name = self._validate_identifier(space_name)
-        opts = [f"partition_num={partition_num}", f"replica_factor={replica_factor}"]
-        if vid_type:
-            opts.append(f"vid_type={vid_type}")
+        opts = [f"partition_num={partition_num}", f"replica_factor={replica_factor}", f"vid_type={vid_type}"]
         self._execute(f"CREATE SPACE IF NOT EXISTS `{name}`({', '.join(opts)});")
         logger.info("Ensured Nebula space exists: %s", name)
 
