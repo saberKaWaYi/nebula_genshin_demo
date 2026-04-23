@@ -166,6 +166,8 @@ class NebulaService:
         chunk_size = 10000
         for begin in range(0, len(edges), chunk_size):
             batch = edges[begin : begin + chunk_size]
+            if not batch:
+                continue
             values_sql: list[str] = []
             for edge in batch:
                 source_vid = self._escape_string(str(edge["source_vid"]))
