@@ -1,14 +1,14 @@
 from contextlib import asynccontextmanager
 
-from config import setup_logging, settings
-
-setup_logging("web")
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.services.rabbitmq_service import RabbitMQService
 from app.api.v1.router import api_router
+
+from config import setup_logging, settings
+
+setup_logging("web")
 
 rabbitmq_service: RabbitMQService = None
 
