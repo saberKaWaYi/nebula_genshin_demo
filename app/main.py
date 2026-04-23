@@ -1,45 +1,38 @@
 from contextlib import asynccontextmanager
 
-from config import settings, setup_logging, get_business_database
+from config import setup_logging, settings
 
 setup_logging("web")
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.services.neo4j_service import Neo4jService
 from app.services.rabbitmq_service import RabbitMQService
 from app.api.v1.router import api_router
 
-neo4j_service: Neo4jService = None
 rabbitmq_service: RabbitMQService = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    global neo4j_service, rabbitmq_service
-
-    neo4j_service = Neo4jService(
-        uri=settings.neo4j_uri,
-        username=settings.neo4j_username,
-        password=settings.neo4j_password,
-        database=get_business_database("genshin"),
-    )
-    neo4j_service.connect()
+    global rabbitmq_service
 
     rabbitmq_service = RabbitMQService(
         host=settings.rabbitmq_host,
         port=settings.rabbitmq_port,
         username=settings.rabbitmq_username,
         password=settings.rabbitmq_password,
-        queue_name=settings.rabbitmq_queue,
+        queue_names=[
+            settings.rabbitmq_queue_nebula,
+            settings.rabbitmq_queue_mongo,
+        ],
+        default_queue_name=settings.rabbitmq_queue_nebula,
     )
     rabbitmq_service.connect()
 
     yield
 
-    neo4j_service.close()
     rabbitmq_service.disconnect()
 
 
