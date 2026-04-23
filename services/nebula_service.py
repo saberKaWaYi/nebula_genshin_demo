@@ -68,6 +68,16 @@ class NebulaService:
             self.password,
         )
 
+    def close(self) -> None:
+        """关闭 Nebula 连接。"""
+        if self._session:
+            self._session.release()
+            self._session = None
+        if self._pool:
+            self._pool.close()
+            self._pool = None
+        logger.info("Nebula connection closed")
+
     def create_space(
         self,
         space_name: str,
@@ -111,16 +121,6 @@ class NebulaService:
         )
         self._execute(f"CREATE EDGE IF NOT EXISTS `{edge}`({prop_sql});")
         logger.info("Ensured Nebula edge type exists: %s", edge)
-
-    def close(self) -> None:
-        """关闭 Nebula 连接。"""
-        if self._session:
-            self._session.release()
-            self._session = None
-        if self._pool:
-            self._pool.close()
-            self._pool = None
-        logger.info("Nebula connection closed")
 
     def add_nodes(
         self, space_name: str, tag: str, nodes: list[dict], chunk_size: int = 10000
