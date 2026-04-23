@@ -4,11 +4,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 from typing import Optional
-
-import json
+from pydantic import ValidationError
+from models.schemas import AddEdgesData, AddNodesData, DeleteEdgesData, DeleteNodesData
 
 import re
 _IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+import json
 
 from nebula3.Config import Config
 from nebula3.gclient.net import ConnectionPool
@@ -113,7 +115,7 @@ class NebulaService:
         logger.info("Ensured Nebula edge type exists: %s", edge)
 
     def close(self) -> None:
-        """关闭 Nebula 连接"""
+        """关闭 Nebula 连接。"""
         if self._session:
             self._session.release()
             self._session = None
@@ -122,75 +124,9 @@ class NebulaService:
             self._pool = None
         logger.info("Nebula connection closed")
 
-    def add_nodes(self, space_name: str, label: str, nodes: list[dict]) -> int:
-        """批量插入节点"""
-        self.select_space(space_name)
-        tag = self._validate_identifier(label)
-        created_count = 0
-        for node in nodes:
-            node_id = self._escape_string(str(node.get("id", "")))
-            properties = node.get("properties", {})
-            properties_json = self._escape_string(json.dumps(properties, ensure_ascii=False))
-            query = (
-                f'INSERT VERTEX `{tag}`(id, properties) VALUES "{node_id}": '
-                f'("{node_id}", "{properties_json}");'
-            )
-            self._execute(query)
-            created_count += 1
-        return created_count
-
-    def add_edges(self, space_name: str, label: str, edges: list[dict]) -> int:
-        """批量插入边（关系）"""
-        self.select_space(space_name)
-        edge_type = self._validate_identifier(label)
-        created_count = 0
-        for edge in edges:
-            source_id = self._escape_string(str(edge.get("source_id", "")))
-            target_id = self._escape_string(str(edge.get("target_id", "")))
-            edge_id = self._escape_string(str(edge.get("id", "")))
-            properties = edge.get("properties", {})
-            properties_json = self._escape_string(json.dumps(properties, ensure_ascii=False))
-            query = (
-                f'INSERT EDGE `{edge_type}`(id, properties) VALUES '
-                f'"{source_id}"->"{target_id}"@0: ("{edge_id}", "{properties_json}");'
-            )
-            self._execute(query)
-            created_count += 1
-        return created_count
-
-    def delete_nodes(self, space_name: str, node_ids: list[str], cascade: bool = True) -> int:
-        """批量删除节点"""
-        self.select_space(space_name)
-        deleted_count = 0
-        for node_id in node_ids:
-            escaped_id = self._escape_string(str(node_id))
-            query = (
-                f'DELETE VERTEX "{escaped_id}" WITH EDGE;'
-                if cascade
-                else f'DELETE VERTEX "{escaped_id}";'
-            )
-            self._execute(query)
-            deleted_count += 1
-        return deleted_count
-
-    def delete_edges(self, space_name: str, label: str, edge_ids: list[str]) -> int:
-        """批量删除边（当前按 `source to target` ID 约定删除）"""
-        self.select_space(space_name)
-        edge_type = self._validate_identifier(label)
-        deleted_count = 0
-        for edge_id in edge_ids:
-            parts = str(edge_id).split(" to ", 1)
-            if len(parts) != 2:
-                logger.warning("Skip edge deletion for unsupported edge id format: %s", edge_id)
-                continue
-            source_id = self._escape_string(parts[0].strip())
-            target_id = self._escape_string(parts[1].strip())
-            self._execute(f'DELETE EDGE `{edge_type}` "{source_id}"->"{target_id}"@0;')
-            deleted_count += 1
-        return deleted_count
-
     def execute_operation(self, space_name: str, operation: str, data: dict) -> dict:
-        """执行数据库操作"""
+        """执行数据库操作。"""
+        validated_data = self._validate_operation_data(operation, data)
         handlers = {
             "add_nodes": self._handle_add_nodes,
             "add_edges": self._handle_add_edges,
@@ -200,7 +136,7 @@ class NebulaService:
         handler = handlers.get(operation)
         if not handler:
             raise ValueError(f"Unknown operation: {operation}")
-        return handler(space_name, data)
+        return handler(space_name, validated_data)
 
     def ping(self) -> bool:
         """通过简单查询验证连接可用"""
@@ -211,28 +147,44 @@ class NebulaService:
             return False
 
     def _handle_add_nodes(self, space_name: str, data: dict) -> dict:
-        label = data.get("label")
-        nodes = data.get("nodes", [])
+        label = data["label"]
+        nodes = data["nodes"]
         count = self.add_nodes(space_name, label, nodes)
         return {"operation": "add_nodes", "count": count, "status": "success"}
 
     def _handle_add_edges(self, space_name: str, data: dict) -> dict:
-        label = data.get("label")
-        edges = data.get("edges", [])
+        label = data["label"]
+        edges = data["edges"]
         count = self.add_edges(space_name, label, edges)
         return {"operation": "add_edges", "count": count, "status": "success"}
 
     def _handle_delete_nodes(self, space_name: str, data: dict) -> dict:
-        node_ids = data.get("node_ids", [])
-        cascade = data.get("cascade", True)
+        node_ids = data["node_ids"]
+        cascade = data["cascade"]
         count = self.delete_nodes(space_name, node_ids, cascade)
         return {"operation": "delete_nodes", "count": count, "status": "success"}
 
     def _handle_delete_edges(self, space_name: str, data: dict) -> dict:
-        label = data.get("label")
-        edge_ids = data.get("edge_ids", [])
+        label = data["label"]
+        edge_ids = data["edge_ids"]
         count = self.delete_edges(space_name, label, edge_ids)
         return {"operation": "delete_edges", "count": count, "status": "success"}
+
+    @staticmethod
+    def _validate_operation_data(operation: str, data: dict) -> dict:
+        model_map = {
+            "add_nodes": AddNodesData,
+            "add_edges": AddEdgesData,
+            "delete_nodes": DeleteNodesData,
+            "delete_edges": DeleteEdgesData,
+        }
+        model_cls = model_map.get(operation)
+        if not model_cls:
+            raise ValueError(f"Unknown operation: {operation}")
+        try:
+            return model_cls.model_validate(data).model_dump()
+        except ValidationError as exc:
+            raise ValueError(f"Invalid payload for operation {operation}: {exc}") from exc
 
     def _execute(self, query: str):
         if not self._session:

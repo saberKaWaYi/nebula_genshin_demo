@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.services.rabbitmq_service import RabbitMQService
+from services.rabbitmq_service import RabbitMQService
 from app.api.v1.router import api_router
 
 from config import setup_logging, settings

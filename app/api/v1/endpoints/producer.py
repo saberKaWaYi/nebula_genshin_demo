@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 import logging
 
-from app.models.schemas import MessageRequest, MessageResponse
-from app.services.rabbitmq_service import RabbitMQService
+from models.schemas import MessageRequest, MessageResponse
+from services.rabbitmq_service import RabbitMQService
 from config import settings
 
 router = APIRouter()
