@@ -27,6 +27,7 @@ class AddEdgesData(BaseModel):
     edge_type: str = Field(..., description="边类型，如Character_to_Character")
     edges: list[EdgeItem] = Field(..., description="边列表")
 
+
 class EdgeItemSimple(BaseModel):
 
     source_vid: str = Field(..., description="源节点vid")
