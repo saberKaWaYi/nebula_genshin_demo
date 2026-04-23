@@ -197,7 +197,7 @@ class GenshinCrawler:
         }
         payload_edges = {
             "operation": "add_edges",
-            "data": {"label": "To", "edges": edges},
+            "data": {"label": "Character_to_Character", "edges": edges},
         }
         api_base_url = settings.crawler_api_base_url.rstrip("/")
         send_url = f"{api_base_url}{settings.api_prefix}/messages/send_nebula"
