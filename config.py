@@ -57,6 +57,11 @@ def _logging_dict_web() -> dict:
                 "level": "INFO",
                 "propagate": False,
             },
+            "services": {
+                "handlers": ["web_file", "console"],
+                "level": "INFO",
+                "propagate": False,
+            },
             "uvicorn": {
                 "handlers": ["web_file", "console"],
                 "level": "INFO",
@@ -102,6 +107,11 @@ def _logging_dict_crawler() -> dict:
                 "level": "DEBUG",
                 "propagate": False,
             },
+            "services": {
+                "handlers": ["crawler_file", "console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
         },
     }
 
@@ -127,7 +137,7 @@ def _logging_dict_worker() -> dict:
                 "level": "INFO",
                 "propagate": False,
             },
-            "app.services": {
+            "services": {
                 "handlers": ["worker_file", "console"],
                 "level": "INFO",
                 "propagate": False,

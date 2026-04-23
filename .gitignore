@@ -6,5 +6,5 @@ logs
 
 myvenv
 
-.env
 .cursor
+.env
