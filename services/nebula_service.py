@@ -175,7 +175,7 @@ class NebulaService:
                     self._to_ngql_literal(properties[k]) for k in key_properties
                 )
                 values_sql.append(
-                    f'"{source_vid}"->"{target_vid}"@0: ({property_values})'
+                    f'"{source_vid}"->"{target_vid}": ({property_values})'
                 )
             if not values_sql:
                 continue
